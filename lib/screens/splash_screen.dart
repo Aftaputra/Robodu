@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+import '../utils/colors.dart';
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+    );
+
+    _animationController.forward();
+
+    // Navigate to home after 3 seconds
+    Future.delayed(Duration(seconds: 3), () {
+      Navigator.pushReplacementNamed(context, '/home');
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.primary,
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Robot Icon
+              Container(
+                width: 120,
+                height: 120,
+                child: CustomPaint(
+                  painter: RobotIconPainter(),
+                ),
+              ),
+              SizedBox(height: 40),
+              // App Name
+              Text(
+                'Robo-du',
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w300,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class RobotIconPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    
+    // Main body
+    final bodyRect = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 60, height: 50),
+      Radius.circular(8),
+    );
+    canvas.drawRRect(bodyRect, paint);
+
+    // Head antenna
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx, center.dy - 35),
+          width: 8,
+          height: 15,
+        ),
+        Radius.circular(4),
+      ),
+      paint,
+    );
+
+    // Arms
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx - 40, center.dy),
+          width: 12,
+          height: 30,
+        ),
+        Radius.circular(6),
+      ),
+      paint,
+    );
+    
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset(center.dx + 40, center.dy),
+          width: 12,
+          height: 30,
+        ),
+        Radius.circular(6),
+      ),
+      paint,
+    );
+
+    // Eyes
+    canvas.drawCircle(Offset(center.dx - 12, center.dy - 8), 4, paint);
+    canvas.drawCircle(Offset(center.dx + 12, center.dy - 8), 4, paint);
+
+    // Mouth dots
+    canvas.drawCircle(Offset(center.dx - 8, center.dy + 8), 2, paint);
+    canvas.drawCircle(Offset(center.dx, center.dy + 8), 2, paint);
+    canvas.drawCircle(Offset(center.dx + 8, center.dy + 8), 2, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
