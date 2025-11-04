@@ -1,235 +1,139 @@
 import 'package:flutter/material.dart';
-import '../utils/colors.dart';
-import '../models/robot.dart';
 
-class SettingsScreen extends StatefulWidget {
-  @override
-  _SettingsScreenState createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  final List<Robot> detectedRobots = [
-    Robot(
-      id: "1",
-      name: "Robo-du 123",
-      status: "Terhubung",
-      isConnected: true,
-      ipAddress: "192.168.1.100",
-      signalStrength: 4,
-      ssid: "ata", // Tambahkan SSID
-    ),
-    Robot(
-      id: "2",
-      name: "Robot-X2",
-      status: "Sambungkan",
-      isConnected: false,
-      ipAddress: "192.168.1.101",
-      signalStrength: 3,
-      ssid: "Robot-X2",
-    ),
-    Robot(
-      id: "3",
-      name: "SmartBot-001",
-      status: "Sambungkan",
-      isConnected: false,
-      ipAddress: "192.168.1.102",
-      signalStrength: 2,
-      ssid: "SmartBot",
-    ),
-  ];
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    const Color mainColor = Color(0xFF4CB6B6);
+    const Color cardColor = Color(0xFFE8F7F7);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildConnectionStatus(),
-              SizedBox(height: 20),
-              _buildRobotDetection(),
-              SizedBox(height: 20),
-              Expanded(child: _buildRobotList()),
+              // Connected Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: const [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: mainColor,
+                      child: Icon(Icons.wifi, color: Colors.white, size: 30),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      "Terhubung",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Robot-X1 • WiFi",
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              const Text(
+                "Robot Terdeteksi",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Robot List
+              Expanded(
+                child: ListView(
+                  children: const [
+                    RobotItem(name: "Robot-X1", connected: true),
+                    RobotItem(name: "Robot-X1", connected: false),
+                    RobotItem(name: "Robot-X1", connected: false),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildConnectionStatus() {
+class RobotItem extends StatelessWidget {
+  final String name;
+  final bool connected;
+
+  const RobotItem({
+    super.key,
+    required this.name,
+    required this.connected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const Color mainColor = Color(0xFF4CB6B6);
+    const Color cardColor = Color(0xFFE8F7F7);
+
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.wifi,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
-          SizedBox(height: 16),
-          Text(
-            "Terhubung",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 4),
-          Text(
-            "Robo-du 123 • WiFi", // Tetap placeholder
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            "SSID: ata", // Info SSID
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRobotDetection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          "Robot Terdeteksi",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        IconButton(
-          onPressed: () {
-            // Refresh detection
-            setState(() {});
-          },
-          icon: Icon(
-            Icons.refresh,
-            color: AppColors.primary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRobotList() {
-    return ListView.builder(
-      itemCount: detectedRobots.length,
-      itemBuilder: (context, index) {
-        final robot = detectedRobots[index];
-        return _buildRobotItem(robot);
-      },
-    );
-  }
-
-  Widget _buildRobotItem(Robot robot) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          // Robot Icon
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: mainColor.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.smart_toy,
-              color: AppColors.primary,
-              size: 24,
-            ),
+            child: const Icon(Icons.smart_toy, color: mainColor),
           ),
-          SizedBox(width: 12),
-          
-          // Robot Info
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  robot.name,
-                  style: TextStyle(
-                    fontSize: 16,
+                  name,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    fontSize: 15,
                   ),
                 ),
                 Text(
-                  "SSID: ${robot.ssid}", // Tampilkan SSID
+                  connected ? "Terhubung" : "Sambungkan",
                   style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  robot.status,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: robot.isConnected 
-                        ? AppColors.success 
-                        : AppColors.textSecondary,
+                    color: connected ? mainColor : Colors.black54,
                   ),
                 ),
               ],
             ),
           ),
-          
-          // Signal Strength
-          _buildSignalStrength(robot.signalStrength),
+          const Icon(Icons.signal_cellular_alt, color: mainColor),
         ],
       ),
-    );
-  }
-
-  Widget _buildSignalStrength(int strength) {
-    return Row(
-      children: List.generate(4, (index) {
-        return Container(
-          width: 4,
-          height: (index + 1) * 4.0 + 8,
-          margin: EdgeInsets.only(right: 2),
-          decoration: BoxDecoration(
-            color: index < strength 
-                ? AppColors.primary 
-                : Colors.grey[300],
-            borderRadius: BorderRadius.circular(2),
-          ),
-        );
-      }),
     );
   }
 }
