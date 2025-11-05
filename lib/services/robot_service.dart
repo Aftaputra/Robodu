@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'dart:convert';
+
+import 'package:robodu/utils/logger.dart';
 
 class RobotService {
   static const int robotPort = 8080;
@@ -8,10 +9,10 @@ class RobotService {
   // Connect to robot via TCP socket
   Future<bool> connectToRobot(String ipAddress) async {
     try {
-      _socket = await Socket.connect(ipAddress, robotPort, timeout: Duration(seconds: 5));
+      _socket = await Socket.connect(ipAddress, robotPort, timeout: const Duration(seconds: 5));
       return true;
     } catch (e) {
-      print("Error connecting to robot: $e");
+      AppLogger.error('Error connecting to robot: $e');
       return false;
     }
   }
@@ -22,9 +23,9 @@ class RobotService {
       try {
         _socket!.write('$command\n');
         await _socket!.flush();
-        print("Command sent: $command");
+        AppLogger.info('Command sent: $command');
       } catch (e) {
-        print("Error sending command: $e");
+        AppLogger.error('Error sending command: $e');
       }
     }
   }

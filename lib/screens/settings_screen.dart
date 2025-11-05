@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:robodu/utils/strings.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  String setName(String name) => '$name • WiFi';
 
   @override
   Widget build(BuildContext context) {
@@ -25,25 +28,26 @@ class SettingsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
-                  children: const [
-                    CircleAvatar(
+                  children: [
+                    const CircleAvatar(
                       radius: 28,
                       backgroundColor: mainColor,
                       child: Icon(Icons.wifi, color: Colors.white, size: 30),
                     ),
-                    SizedBox(height: 12),
-                    Text(
-                      "Terhubung",
+                    const SizedBox(height: 12),
+                    const Text(
+                      SettingText.connected,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
-                      "Robot-X1 • WiFi",
-                      style: TextStyle(color: Colors.black54),
+                      // TODO: change this to actual robot name
+                      setName('Robot1'),
+                      style: const TextStyle(color: Colors.black54),
                     ),
                   ],
                 ),
@@ -51,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
               const Text(
-                "Robot Terdeteksi",
+                SettingText.robotDetected,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -63,9 +67,9 @@ class SettingsScreen extends StatelessWidget {
               Expanded(
                 child: ListView(
                   children: const [
-                    RobotItem(name: "Robot-X1", connected: true),
-                    RobotItem(name: "Robot-X1", connected: false),
-                    RobotItem(name: "Robot-X1", connected: false),
+                    RobotItem(name: 'Robot-X1', connected: true),
+                    RobotItem(name: 'Robot-X1', connected: false),
+                    RobotItem(name: 'Robot-X1', connected: false),
                   ],
                 ),
               ),
@@ -105,7 +109,7 @@ class RobotItem extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: mainColor.withOpacity(0.2),
+              color: mainColor.withAlpha(51),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.smart_toy, color: mainColor),
@@ -123,7 +127,7 @@ class RobotItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  connected ? "Terhubung" : "Sambungkan",
+                  connected ? SettingText.connected : SettingText.connect,
                   style: TextStyle(
                     color: connected ? mainColor : Colors.black54,
                   ),

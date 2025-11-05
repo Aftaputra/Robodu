@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:robodu/utils/helper.dart';
+import 'package:robodu/utils/strings.dart';
 
 class StatusScreen extends StatelessWidget {
   const StatusScreen({super.key});
@@ -17,7 +19,7 @@ class StatusScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                "Status Robot",
+                StatusText.title,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -38,7 +40,7 @@ class StatusScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Status",
+                      StatusText.subTitleSensor,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -49,7 +51,7 @@ class StatusScreen extends StatelessWidget {
                       children: [
                         Icon(Icons.check_circle, color: mainColor, size: 20),
                         SizedBox(width: 6),
-                        Text("Kamera OK"),
+                        Text(StatusText.sensorCameraStatus),
                       ],
                     ),
                     SizedBox(height: 4),
@@ -57,7 +59,7 @@ class StatusScreen extends StatelessWidget {
                       children: [
                         Icon(Icons.check_circle, color: mainColor, size: 20),
                         SizedBox(width: 6),
-                        Text("Enose OK"),
+                        Text(StatusText.sensorEnoseStatus),
                       ],
                     ),
                   ],
@@ -77,14 +79,14 @@ class StatusScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "ENose",
+                      StatusText.subTitleEnose,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      "Hasil Klasifikasi >>",
+                      StatusText.enoseSensorResult,
                       style: TextStyle(
                         color: mainColor,
                         fontWeight: FontWeight.w500,
@@ -103,21 +105,26 @@ class StatusScreen extends StatelessWidget {
                   color: cardColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Log Aktivitas",
+                    const Text(
+                      StatusText.subTitleLog,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    _LogItem(title: "Terkoneksi", time: "14:32"),
-                    _LogItem(title: "Bergerak Maju", time: "14:30"),
-                    _LogItem(title: "Kalibrasi Selesai", time: "14:28"),
-                    _LogItem(title: "Sistem Aktif", time: "14:25"),
+                    const SizedBox(height: 8),
+                    // TODO: change time value based on data from robot
+                    _LogItem(title: StatusText.logMoveForward, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logMoveStop, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logTurnRight, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logTurnLeft, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logRightHandMove, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logLeftHandMove, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logSpeakRobodu, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
+                    _LogItem(title: StatusText.logIntroduceSelf, time: AppHelper.getFormattedDate(DateTime.now(), format: 'HH:mm')),
                   ],
                 ),
               ),

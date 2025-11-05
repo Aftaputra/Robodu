@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../utils/colors.dart';
-
+import '../utils/route.dart';
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
@@ -15,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -25,8 +27,9 @@ class _SplashScreenState extends State<SplashScreen>
     _animationController.forward();
 
     // Navigate to home after 3 seconds
-    Future.delayed(Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/home');
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, AppRoute.home);
     });
   }
 
@@ -47,16 +50,16 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Robot Icon
-              Container(
+              SizedBox(
                 width: 120,
                 height: 120,
                 child: CustomPaint(
                   painter: RobotIconPainter(),
                 ),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               // App Name
-              Text(
+              const Text(
                 'Robo-du',
                 style: TextStyle(
                   fontSize: 48,
@@ -77,7 +80,7 @@ class RobotIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withAlpha(204)
       ..style = PaintingStyle.fill;
 
     final center = Offset(size.width / 2, size.height / 2);
@@ -85,7 +88,7 @@ class RobotIconPainter extends CustomPainter {
     // Main body
     final bodyRect = RRect.fromRectAndRadius(
       Rect.fromCenter(center: center, width: 60, height: 50),
-      Radius.circular(8),
+      const Radius.circular(8),
     );
     canvas.drawRRect(bodyRect, paint);
 
@@ -97,7 +100,7 @@ class RobotIconPainter extends CustomPainter {
           width: 8,
           height: 15,
         ),
-        Radius.circular(4),
+        const Radius.circular(4),
       ),
       paint,
     );
@@ -110,7 +113,7 @@ class RobotIconPainter extends CustomPainter {
           width: 12,
           height: 30,
         ),
-        Radius.circular(6),
+        const Radius.circular(6),
       ),
       paint,
     );
@@ -122,7 +125,7 @@ class RobotIconPainter extends CustomPainter {
           width: 12,
           height: 30,
         ),
-        Radius.circular(6),
+        const Radius.circular(6),
       ),
       paint,
     );

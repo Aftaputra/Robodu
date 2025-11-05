@@ -1,45 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:robodu/utils/strings.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/status_screen.dart';
 import 'screens/settings_screen.dart';
 import 'utils/colors.dart';
+import 'utils/route.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const App());
 }
 
-class MyApp extends StatelessWidget {
+class App extends StatelessWidget {
+  const App({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Robo-du Control',
+      title: MainText.title,
       theme: ThemeData(
         primarySwatch: Colors.teal,
         scaffoldBackgroundColor: AppColors.background,
       ),
-      home: SplashScreen(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
       routes: {
-        '/splash': (context) => SplashScreen(),
-        '/home': (context) => MainScreen(),
+        AppRoute.splash: (context) => const SplashScreen(),
+        AppRoute.home: (context) => const MainScreen(),
       },
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   
   final List<Widget> _screens = [
-    HomeScreen(),
-    StatusScreen(),
-    SettingsScreen(),
+    const HomeScreen(),
+    const StatusScreen(),
+    const SettingsScreen(),
   ];
 
   @override
@@ -57,21 +63,21 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey,
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
             activeIcon: Icon(Icons.home),
-            label: 'Home',
+            label: MainText.labelHome,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart_outlined),
             activeIcon: Icon(Icons.bar_chart),
-            label: 'Status',
+            label: MainText.labelStatus,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings),
-            label: 'Settings',
+            label: MainText.labelSetting,
           ),
         ],
       ),

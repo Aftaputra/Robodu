@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:robodu/utils/helper.dart';
+import 'package:robodu/utils/logger.dart';
 import 'dart:io';
 import 'dart:convert';
 import '../utils/colors.dart';
+import '../utils/strings.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   bool isConnected = false;
+  // TODO: change this to actual robot name
   String robotName = "Robot Camera";
-  String status = "Menunggu koneksi...";
+  String status = HomeText.waitingConnection;
   String robotIP = "";
   
   // Variabel untuk slider
@@ -39,72 +45,62 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  String setIp(String ip) => 'IP: $ip';
+  String setStatus(String status) => 'Status: $status';
+
   // Koneksi ke robot
   Future<void> _connectToRobot() async {
     if (_ipController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Masukkan IP Address robot!"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppHelper.showSnackBarError(HomeText.inputIpRobot);
       return;
     }
 
     try {
       setState(() {
-        status = "Menghubungkan...";
+        status = HomeText.connecting;
       });
 
       // Koneksi ke robot via Socket (port 8080)
       _socket = await Socket.connect(
         _ipController.text,
         8080,
-        timeout: Duration(seconds: 5),
+        timeout: const Duration(seconds: 5),
       );
 
+      if (!mounted) return;
+      
       // Set stream URL
       streamUrl = "http://${_ipController.text}:8081/stream";
 
       setState(() {
         isConnected = true;
         robotIP = _ipController.text;
-        status = "Terhubung";
+        status = HomeText.connected;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Berhasil terhubung ke robot!"),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppHelper.showSnackBarSuccess(HomeText.robotConnected);
 
       // Listen untuk response dari robot
       _socket!.listen(
         (data) {
-          print("Data dari robot: ${utf8.decode(data)}");
+          AppLogger.info('Data dari robot: ${utf8.decode(data)}');
         },
         onDone: () {
           _disconnectFromRobot();
         },
         onError: (error) {
-          print("Socket error: $error");
+          AppLogger.error('Socket error: $error');
           _disconnectFromRobot();
         },
       );
     } catch (e) {
-      print("Error connecting: $e");
+      AppLogger.error('Error connecting: $e');
       setState(() {
         isConnected = false;
-        status = "Gagal terhubung";
+        status = HomeText.failedToConnect;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Gagal terhubung: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      AppHelper.showSnackBarError('${HomeText.failedToConnect}: $e');
     }
   }
 
@@ -115,16 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
     
     setState(() {
       isConnected = false;
-      status = "Terputus";
+      status = HomeText.disconnected;
       streamUrl = "";
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Terputus dari robot"),
-        backgroundColor: AppColors.error,
-      ),
-    );
+    AppHelper.showSnackBarError(HomeText.robotDisconnected);
   }
 
   // Kirim command ke robot
@@ -133,7 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       Map<String, dynamic> message = {
-        'command': command,
+        command: command,
         'timestamp': DateTime.now().millisecondsSinceEpoch,
       };
 
@@ -141,38 +132,39 @@ class _HomeScreenState extends State<HomeScreen> {
         message.addAll(data);
       }
 
-      String jsonMessage = jsonEncode(message) + '\n';
+      String jsonMessage = '${jsonEncode(message)}\n';
       _socket!.write(jsonMessage);
       
-      print("Sent command: $command");
+      AppLogger.info('Sent command: $command');
+      
     } catch (e) {
-      print("Error sending command: $e");
+      AppLogger.error('Error sending command: $e');
     }
   }
 
   // Movement commands
   void _moveForward() {
-    setState(() => status = "Gerak Maju");
+    setState(() => status = HomeText.moveForward);
     _sendCommand('forward');
   }
 
   void _moveBackward() {
-    setState(() => status = "Gerak Mundur");
+    setState(() => status = HomeText.moveBackwards);
     _sendCommand('backward');
   }
 
   void _turnLeft() {
-    setState(() => status = "Belok Kiri");
+    setState(() => status = HomeText.turnLeft);
     _sendCommand('left');
   }
 
   void _turnRight() {
-    setState(() => status = "Belok Kanan");
+    setState(() => status = HomeText.turnRight);
     _sendCommand('right');
   }
 
   void _stop() {
-    setState(() => status = "Berhenti");
+    setState(() => status = HomeText.moveStop);
     _sendCommand('stop');
   }
 
@@ -202,8 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               flex: 2,
               child: Container(
-                color: Color(0xFFE8F7FA),
-                padding: EdgeInsets.all(16),
+                color: const Color(0xFFE8F7FA),
+                padding: const EdgeInsets.all(16),
                 child: _buildControlSection(),
               ),
             ),
@@ -215,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -223,16 +215,16 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Connected to :",
+                const Text(
+                  HomeText.connectedTo,
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
                 ),
                 Text(
-                  isConnected ? robotName : "Belum terhubung",
-                  style: TextStyle(
+                  isConnected ? robotName : HomeText.notConnected,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -240,8 +232,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 if (isConnected)
                   Text(
-                    "IP: $robotIP",
-                    style: TextStyle(
+                    setIp(robotIP),
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
@@ -260,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            child: Text(isConnected ? "Disconnect" : "Connect"),
+            child: Text(isConnected ? HomeText.btnDisconnect : HomeText.btnConnect),
           ),
         ],
       ),
@@ -271,27 +263,27 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Connect to Robot"),
+        title: const Text(HomeText.connectToRobot),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "Masukkan IP Address robot:",
+            const Text(
+              HomeText.inputIpRobot,
               style: TextStyle(fontSize: 14),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             TextField(
               controller: _ipController,
-              decoration: InputDecoration(
-                hintText: "192.168.1.100",
+              decoration: const InputDecoration(
+                hintText: HomeText.inputIpHint,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.wifi),
               ),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
-            SizedBox(height: 8),
-            Text(
-              "Pastikan kedua HP terhubung ke WiFi yang sama",
+            const SizedBox(height: 8),
+            const Text(
+              HomeText.hintConnectToRobot,
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -299,14 +291,14 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Batal"),
+            child: const Text(HomeText.btnCancelled),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _connectToRobot();
             },
-            child: Text("Connect"),
+            child: const Text(HomeText.btnConnect),
           ),
         ],
       ),
@@ -315,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildVideoStream() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: isConnected ? Colors.black : Colors.grey,
         borderRadius: BorderRadius.circular(12),
@@ -331,19 +323,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) return child;
-                  return Center(
+                  return const Center(
                     child: CircularProgressIndicator(),
                   );
                 },
                 errorBuilder: (context, error, stackTrace) {
-                  return Center(
+                  return const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.error, color: Colors.white, size: 50),
                         SizedBox(height: 8),
                         Text(
-                          "Error loading stream",
+                          HomeText.streamError,
                           style: TextStyle(color: Colors.white),
                         ),
                       ],
@@ -362,24 +354,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white,
                     size: 50,
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    isConnected ? "Loading stream..." : "Tidak Terhubung",
-                    style: TextStyle(
+                    isConnected ? HomeText.streamLoading : HomeText.notConnected,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.w300,
                     ),
                   ),
                   if (!isConnected) ...[
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _showConnectDialog,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.primary,
                       ),
-                      child: Text("Connect Robot"),
+                      child: const Text(HomeText.btnConnect),
                     ),
                   ],
                 ],
@@ -389,13 +381,13 @@ class _HomeScreenState extends State<HomeScreen> {
             bottom: 16,
             left: 16,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withAlpha(153),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                "Status: $status",
+                setStatus(status),
                 style: TextStyle(
                   color: isConnected ? AppColors.success : AppColors.error,
                   fontSize: 12,
@@ -414,15 +406,15 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           children: [
             Expanded(
-              child: _buildSlider("L", "Lengan Kiri", leftArmValue, _updateLeftArm),
+              child: _buildSlider(HomeText.l, HomeText.ctlLeftHand, leftArmValue, _updateLeftArm),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
-              child: _buildSlider("R", "Lengan Kanan", rightArmValue, _updateRightArm),
+              child: _buildSlider(HomeText.l, HomeText.ctlRightHand, rightArmValue, _updateRightArm),
             ),
           ],
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Expanded(
           child: Stack(
             children: [
@@ -445,20 +437,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.wifi_off, color: Colors.white, size: 40),
-                          SizedBox(height: 8),
-                          Text(
-                            "Robot Tidak Terhubung",
+                          const Icon(Icons.wifi_off, color: Colors.white, size: 40),
+                          const SizedBox(height: 8),
+                          const Text(
+                            HomeText.robotNotConnected,
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           ElevatedButton(
                             onPressed: _showConnectDialog,
-                            child: Text("Connect Sekarang"),
+                            child: const Text(HomeText.btnConnect),
                           ),
                         ],
                       ),
@@ -496,7 +488,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -504,7 +496,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Text(
                 description,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 10,
                   color: AppColors.textSecondary,
                 ),
@@ -525,9 +517,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDirectionalPad() {
-    final double buttonSize = 64;
+    const double buttonSize = 64;
 
-    return Container(
+    return SizedBox(
       width: buttonSize * 3,
       height: buttonSize * 3,
       child: Stack(
@@ -577,16 +569,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: buttonSize,
                 height: buttonSize,
                 decoration: BoxDecoration(
-                  color: isConnected ? Color(0xFFE97451) : Colors.grey,
+                  color: isConnected ? const Color(0xFFE97451) : Colors.grey,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isConnected ? AppColors.accent : Colors.grey,
                     width: 2,
                   ),
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
-                    "STOP",
+                    HomeText.stop,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 10,
