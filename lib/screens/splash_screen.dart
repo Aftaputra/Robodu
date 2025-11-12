@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.primary, // teal background
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -80,11 +80,11 @@ class RobotIconPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withAlpha(204)
+      ..color = const Color(0xFF1E6F6E) // dark teal color
       ..style = PaintingStyle.fill;
 
     final center = Offset(size.width / 2, size.height / 2);
-    
+
     // Main body
     final bodyRect = RRect.fromRectAndRadius(
       Rect.fromCenter(center: center, width: 60, height: 50),
@@ -117,7 +117,7 @@ class RobotIconPainter extends CustomPainter {
       ),
       paint,
     );
-    
+
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
@@ -130,14 +130,19 @@ class RobotIconPainter extends CustomPainter {
       paint,
     );
 
+    // Eyes & Mouth (lighter shade for contrast)
+    final detailPaint = Paint()
+      ..color = Colors.white.withOpacity(0.9)
+      ..style = PaintingStyle.fill;
+
     // Eyes
-    canvas.drawCircle(Offset(center.dx - 12, center.dy - 8), 4, paint);
-    canvas.drawCircle(Offset(center.dx + 12, center.dy - 8), 4, paint);
+    canvas.drawCircle(Offset(center.dx - 12, center.dy - 8), 4, detailPaint);
+    canvas.drawCircle(Offset(center.dx + 12, center.dy - 8), 4, detailPaint);
 
     // Mouth dots
-    canvas.drawCircle(Offset(center.dx - 8, center.dy + 8), 2, paint);
-    canvas.drawCircle(Offset(center.dx, center.dy + 8), 2, paint);
-    canvas.drawCircle(Offset(center.dx + 8, center.dy + 8), 2, paint);
+    canvas.drawCircle(Offset(center.dx - 8, center.dy + 8), 2, detailPaint);
+    canvas.drawCircle(Offset(center.dx, center.dy + 8), 2, detailPaint);
+    canvas.drawCircle(Offset(center.dx + 8, center.dy + 8), 2, detailPaint);
   }
 
   @override
