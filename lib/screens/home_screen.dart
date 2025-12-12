@@ -5,6 +5,8 @@ import 'dart:io';
 import 'dart:convert';
 import '../utils/colors.dart';
 import '../utils/strings.dart';
+import '../services/audio_classifier.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
   // Stream URL
   String streamUrl = "";
 
+  // Voice mode variables
+  bool _isVoiceMode = false;
+  String _voiceCommand = "N/A";
+  AudioClassifier? _audioClassifier;
+  List<PredictionResult> _topPredictions = [];
+  double _inferenceTime = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _socket?.close();
     _ipController.dispose();
+    _audioClassifier?.dispose();
     super.dispose();
   }
 
@@ -177,6 +187,79 @@ class _HomeScreenState extends State<HomeScreen> {
   void _updateRightArm(int value) {
     setState(() => rightArmValue = value);
     _sendCommand('right_arm', data: {'value': value});
+  }
+
+  // Voice mode methods
+  Future<void> _toggleVoiceMode() async {
+    if (_isVoiceMode) {
+      // Stop voice mode
+      await _audioClassifier?.stopListening();
+      setState(() {
+        _isVoiceMode = false;
+        _voiceCommand = "N/A";
+        _topPredictions = [];
+      });
+      AppHelper.showSnackBarSuccess("Voice mode deactivated");
+    } else {
+      // Start voice mode
+      final permission = await Permission.microphone.request();
+      if (permission.isGranted) {
+        try {
+          if (_audioClassifier == null) {
+            _audioClassifier = AudioClassifier(
+              onPrediction: (command, predictions, inferenceTime) {
+                setState(() {
+                  _voiceCommand = command;
+                  _topPredictions = predictions;
+                  _inferenceTime = inferenceTime;
+                });
+                
+                // Execute command if valid
+                if (command != "N/A" && isConnected) {
+                  _executeVoiceCommand(command);
+                }
+              },
+            );
+            await _audioClassifier!.initialize();
+          }
+          
+          await _audioClassifier!.startListening();
+          setState(() {
+            _isVoiceMode = true;
+          });
+          AppHelper.showSnackBarSuccess("Voice mode activated");
+        } catch (e) {
+          AppLogger.error('Error starting voice mode: $e');
+          AppHelper.showSnackBarError("Failed to start voice mode: $e");
+        }
+      } else {
+        AppHelper.showSnackBarError("Microphone permission denied");
+      }
+    }
+  }
+
+  void _executeVoiceCommand(String command) {
+    final commandLower = command.toLowerCase();
+    switch (commandLower) {
+      case 'maju':
+        _sendCommand('forward');
+        setState(() => status = "Voice: Moving forward");
+        break;
+      case 'mundur':
+        _sendCommand('backward');
+        setState(() => status = "Voice: Moving backward");
+        break;
+      case 'kanan':
+        _sendCommand('right');
+        setState(() => status = "Voice: Turning right");
+        break;
+      case 'kiri':
+        _sendCommand('left');
+        setState(() => status = "Voice: Turning left");
+        break;
+      default:
+        AppLogger.info('Unknown voice command: $command');
+    }
   }
 
   @override
@@ -395,6 +478,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, '/cv_workspace');
+              },
+              icon: const Icon(Icons.smart_toy, size: 20),
+              label: const Text('CV Training'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -421,7 +520,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Positioned.fill(
                 child: Align(
                   alignment: Alignment.center,
-                  child: _buildDirectionalPad(),
+                  child: _isVoiceMode ? _buildVoiceOverlay() : _buildDirectionalPad(),
                 ),
               ),
               Positioned(
@@ -619,22 +718,103 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildMicrophoneButton() {
+  Widget _buildVoiceOverlay() {
     return Container(
-      width: 40,
-      height: 40,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isConnected ? AppColors.cardBackground : Colors.grey[300],
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isConnected ? AppColors.accent : Colors.grey,
-          width: 2,
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.accent, width: 2),
       ),
-      child: Icon(
-        Icons.mic,
-        color: isConnected ? AppColors.success : Colors.grey,
-        size: 20,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _voiceCommand != "N/A" ? Icons.mic : Icons.mic_none,
+            size: 60,
+            color: _voiceCommand != "N/A" ? AppColors.success : AppColors.textSecondary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Voice Command',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _voiceCommand,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: _voiceCommand != "N/A" ? AppColors.success : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_topPredictions.isNotEmpty) ...[
+            const Divider(),
+            const SizedBox(height: 8),
+            ...(_topPredictions.take(3).map((pred) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    pred.label,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  Text(
+                    '${(pred.confidence * 100).toStringAsFixed(1)}%',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ))),
+            const SizedBox(height: 8),
+            Text(
+              'Inference: ${_inferenceTime.toStringAsFixed(1)}ms',
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMicrophoneButton() {
+    return GestureDetector(
+      onTap: isConnected ? _toggleVoiceMode : null,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: _isVoiceMode 
+              ? AppColors.error 
+              : (isConnected ? AppColors.cardBackground : Colors.grey[300]),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: _isVoiceMode 
+                ? AppColors.error 
+                : (isConnected ? AppColors.accent : Colors.grey),
+            width: 2,
+          ),
+        ),
+        child: Icon(
+          _isVoiceMode ? Icons.mic_off : Icons.mic,
+          color: _isVoiceMode 
+              ? Colors.white 
+              : (isConnected ? AppColors.success : Colors.grey),
+          size: 20,
+        ),
       ),
     );
   }

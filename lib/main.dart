@@ -4,10 +4,21 @@ import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/status_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/cv_workspace_screen.dart';
 import 'utils/colors.dart';
 import 'utils/route.dart';
+import 'package:camera/camera.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize cameras for CV workspace
+  try {
+    cameras = await availableCameras();
+  } catch (e) {
+    print('Error initializing cameras: $e');
+  }
+  
   runApp(const App());
 }
 
@@ -27,6 +38,7 @@ class App extends StatelessWidget {
       routes: {
         AppRoute.splash: (context) => const SplashScreen(),
         AppRoute.home: (context) => const MainScreen(),
+        '/cv_workspace': (context) => const CVWorkspaceScreen(),
       },
     );
   }
