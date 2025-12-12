@@ -4,6 +4,7 @@ import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/status_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/cv_workspace_screen.dart';
 import 'utils/colors.dart';
 import 'utils/route.dart';
 
@@ -27,6 +28,7 @@ class App extends StatelessWidget {
       routes: {
         AppRoute.splash: (context) => const SplashScreen(),
         AppRoute.home: (context) => const MainScreen(),
+        '/cv_workspace': (context) => const CVWorkspaceScreen(),
       },
     );
   }
